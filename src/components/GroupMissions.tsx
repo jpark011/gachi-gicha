@@ -27,9 +27,14 @@ export interface Group {
 interface GroupMissionsProps {
   group: Group;
   onToggleMission: (groupId: string, missionId: number) => void;
+  onMission1Click?: (groupId: string) => void;
 }
 
-export function GroupMissions({ group, onToggleMission }: GroupMissionsProps) {
+export function GroupMissions({
+  group,
+  onToggleMission,
+  onMission1Click,
+}: GroupMissionsProps) {
   const completedCount = group.missions.filter((m) => m.completed).length;
   const totalCount = group.missions.length;
   const progress = (completedCount / totalCount) * 100;
@@ -90,7 +95,17 @@ export function GroupMissions({ group, onToggleMission }: GroupMissionsProps) {
                   id={`mission-${group.id}-${mission.id}`}
                   checked={mission.completed}
                   disabled={!isEnabled}
-                  onCheckedChange={() => onToggleMission(group.id, mission.id)}
+                  onCheckedChange={() => {
+                    if (
+                      mission.id === 1 &&
+                      !mission.completed &&
+                      onMission1Click
+                    ) {
+                      onMission1Click(group.id);
+                    } else {
+                      onToggleMission(group.id, mission.id);
+                    }
+                  }}
                   className="mt-0.5 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 disabled:cursor-not-allowed"
                 />
                 <label

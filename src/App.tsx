@@ -1,10 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { Hero } from "./components/Hero";
 import { MapDisplay } from "./components/MapDisplay";
 import { GroupMissions, Group } from "./components/GroupMissions";
 import { Timeline } from "./components/Timeline";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./components/ui/dialog";
+import { Input } from "./components/ui/input";
+import { Button } from "./components/ui/button";
 import heroImage from "/hero.jpg";
 
 const GROUPS = [
@@ -64,8 +74,8 @@ const SCHEDULE = [
   {
     time: "13:30",
     title: "팀별 미션수행",
-    description: `· 🗽럼프팀: 경주박물관 → 월정교/최부자댁 → 설월당 
-· 🧧진핑팀: 활리단길 → 경주타워/황룡원 → 브레스커피웍스`,
+    description: `· 🗽: 경주박물관 → 월정교/최부자댁 → 설월당 
+· 🧧: 활리단길 → 경주타워/황룡원 → 브레스커피웍스`,
   },
   {
     time: "16:30",
@@ -90,6 +100,12 @@ const SCHEDULE = [
 ];
 
 const STORAGE_KEY = "trip-planner-missions";
+
+// Verification codes for mission 1 (4-digit codes)
+const MISSION_1_CODES: Record<string, string> = {
+  A: "9771", // Team A code
+  B: "0821", // Team B code
+};
 
 // Helper function to merge stored groups with defaults
 // This ensures new missions are added while preserving completion status
@@ -120,6 +136,11 @@ export default function App() {
     defaultValue: GROUPS,
     storageSync: true,
   });
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
+  const [verifyingGroupId, setVerifyingGroupId] = useState<string | null>(null);
+  const [verificationCode, setVerificationCode] = useState(["", "", "", ""]);
+  const [verificationError, setVerificationError] = useState("");
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Merge with defaults on mount to handle new missions
   useEffect(() => {
@@ -133,6 +154,107 @@ export default function App() {
   }, []); // Only run on mount
 
   const currentGroup = groups.find((g) => g.id === activeMapGroup) || groups[0];
+
+  const handleMission1Click = (groupId: string) => {
+    setVerifyingGroupId(groupId);
+    setVerificationModalOpen(true);
+    setVerificationCode(["", "", "", ""]);
+    setVerificationError("");
+    // Focus first input when modal opens
+    setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 100);
+  };
+
+  const handleVerification = (codeToVerify?: string[]) => {
+    if (!verifyingGroupId) return;
+
+    // Use provided code or fall back to state
+    const codeArray = codeToVerify || verificationCode;
+    const enteredCode = codeArray.join("").trim();
+    const correctCode = MISSION_1_CODES[verifyingGroupId];
+
+    if (enteredCode === correctCode) {
+      // Complete mission 1
+      setGroups((prevGroups) =>
+        prevGroups.map((group) =>
+          group.id === verifyingGroupId
+            ? {
+                ...group,
+                missions: group.missions.map((mission) =>
+                  mission.id === 1 ? { ...mission, completed: true } : mission
+                ),
+              }
+            : group
+        )
+      );
+      setVerificationModalOpen(false);
+      setVerificationCode(["", "", "", ""]);
+      setVerificationError("");
+      setVerifyingGroupId(null);
+    } else {
+      setVerificationError("잘못된 코드입니다. 다시 시도해주세요.");
+      setVerificationCode(["", "", "", ""]);
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 100);
+    }
+  };
+
+  const handleCodeInput = (index: number, value: string) => {
+    // Only allow single digit - take the last character if multiple entered
+    const digit = value.replace(/\D/g, "").slice(-1);
+    if (!digit) return; // Don't update if no digit
+
+    const newCode = [...verificationCode];
+    newCode[index] = digit;
+    setVerificationCode(newCode);
+    setVerificationError("");
+
+    // Auto-focus next input if digit entered
+    if (digit && index < 3) {
+      setTimeout(() => {
+        inputRefs.current[index + 1]?.focus();
+      }, 10);
+    }
+
+    // Auto-submit if all 4 digits entered - pass the newCode directly to avoid state timing issues
+    const allFilled = newCode.every((d) => d !== "" && d.length === 1);
+    if (allFilled && newCode.join("").length === 4) {
+      setTimeout(() => {
+        handleVerification(newCode);
+      }, 100);
+    }
+  };
+
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    // Handle backspace
+    if (e.key === "Backspace" && !verificationCode[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+    // Handle paste
+    if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+      e.preventDefault();
+      navigator.clipboard.readText().then((text) => {
+        const digits = text.replace(/\D/g, "").slice(0, 4).split("");
+        const newCode = [...verificationCode];
+        digits.forEach((digit, i) => {
+          if (i < 4) newCode[i] = digit;
+        });
+        setVerificationCode(newCode);
+        if (digits.length === 4) {
+          setTimeout(() => {
+            handleVerification(newCode);
+          }, 100);
+        } else {
+          inputRefs.current[Math.min(digits.length, 3)]?.focus();
+        }
+      });
+    }
+  };
 
   const handleToggleMission = (groupId: string, missionId: number) => {
     setGroups((prevGroups) => {
@@ -212,6 +334,7 @@ export default function App() {
                   <GroupMissions
                     group={group}
                     onToggleMission={handleToggleMission}
+                    onMission1Click={handleMission1Click}
                   />
                 </TabsContent>
               ))}
@@ -225,6 +348,7 @@ export default function App() {
                 key={group.id}
                 group={group}
                 onToggleMission={handleToggleMission}
+                onMission1Click={handleMission1Click}
               />
             ))}
           </div>
@@ -235,6 +359,62 @@ export default function App() {
           <Timeline events={SCHEDULE} />
         </section>
       </main>
+
+      {/* Verification Modal */}
+      <Dialog
+        open={verificationModalOpen}
+        onOpenChange={setVerificationModalOpen}
+      >
+        <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle>미션 1 인증</DialogTitle>
+            <DialogDescription>
+              비밀쪽지에서 찾은 4자리 코드를 입력해주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex justify-center gap-3">
+              {[0, 1, 2, 3].map((index) => (
+                <Input
+                  key={index}
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={1}
+                  value={verificationCode[index]}
+                  onChange={(e) => handleCodeInput(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  className="w-16 h-16 text-center text-3xl font-mono font-bold border-2 focus:border-primary"
+                  autoComplete="off"
+                />
+              ))}
+            </div>
+            {verificationError && (
+              <p className="text-sm text-red-500 text-center">
+                {verificationError}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setVerificationCode(["", "", "", ""]);
+                setVerificationError("");
+                setTimeout(() => {
+                  inputRefs.current[0]?.focus();
+                }, 10);
+              }}
+              className="w-full"
+            >
+              초기화
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
