@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useLocalStorageState from "use-local-storage-state";
 import { Hero } from "./components/Hero";
 import { MapDisplay } from "./components/MapDisplay";
 import { GroupMissions, Group } from "./components/GroupMissions";
@@ -87,9 +88,49 @@ const SCHEDULE = [
     description: "삼수갑산",
   },
 ];
+
+const STORAGE_KEY = "trip-planner-missions";
+
+// Helper function to merge stored groups with defaults
+// This ensures new missions are added while preserving completion status
+const mergeGroupsWithDefaults = (stored: Group[] | null): Group[] => {
+  if (!stored) return GROUPS;
+
+  return GROUPS.map((defaultGroup) => {
+    const storedGroup = stored.find((g) => g.id === defaultGroup.id);
+    if (!storedGroup) return defaultGroup;
+
+    // Merge missions: preserve stored completion status, use default for new missions
+    const mergedMissions = defaultGroup.missions.map((defaultMission) => {
+      const storedMission = storedGroup.missions.find(
+        (m) => m.id === defaultMission.id
+      );
+      return storedMission
+        ? { ...defaultMission, completed: storedMission.completed }
+        : defaultMission;
+    });
+
+    return { ...defaultGroup, missions: mergedMissions };
+  });
+};
+
 export default function App() {
   const [activeMapGroup, setActiveMapGroup] = useState("A");
-  const [groups, setGroups] = useState<Group[]>(GROUPS);
+  const [groups, setGroups] = useLocalStorageState<Group[]>(STORAGE_KEY, {
+    defaultValue: GROUPS,
+    storageSync: true,
+  });
+
+  // Merge with defaults on mount to handle new missions
+  useEffect(() => {
+    const merged = mergeGroupsWithDefaults(groups);
+    // Only update if merge resulted in changes (new missions added)
+    const hasChanges = JSON.stringify(merged) !== JSON.stringify(groups);
+    if (hasChanges) {
+      setGroups(merged);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   const currentGroup = groups.find((g) => g.id === activeMapGroup) || groups[0];
 
