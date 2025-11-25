@@ -75,7 +75,7 @@ const SCHEDULE = [
     time: "13:30",
     title: "팀별 미션수행",
     description: `· 🗽: 경주박물관 → 월정교/최부자댁 → 설월당 
-· 🧧: 활리단길 → 경주타워/황룡원 → 브레스커피웍스`,
+· 🧧: 황리단길 → 경주타워/황룡원 → 브레스커피웍스`,
   },
   {
     time: "16:30",
@@ -367,10 +367,7 @@ export default function App() {
       >
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle>미션 1 인증</DialogTitle>
-            <DialogDescription>
-              비밀쪽지에서 찾은 4자리 코드를 입력해주세요.
-            </DialogDescription>
+            <DialogTitle>ENTER PASSCODE</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex justify-center gap-3">
@@ -410,7 +407,7 @@ export default function App() {
               }}
               className="w-full"
             >
-              초기화
+              RESET
             </Button>
           </DialogFooter>
         </DialogContent>

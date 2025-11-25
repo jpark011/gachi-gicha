@@ -78,7 +78,7 @@ export function GroupMissions({
           미션 목록
         </div>
         <div className="space-y-3">
-          {group.missions.map((mission) => {
+          {group.missions.map((mission, index) => {
             const isEnabled = isMissionEnabled(mission.id);
             return (
               <div
@@ -118,7 +118,9 @@ export function GroupMissions({
                       : "text-gray-700 cursor-pointer"
                   }`}
                 >
-                  {!isEnabled ? "🔒 ??? (미션 1 완료 후 공개)" : mission.text}
+                  {!isEnabled
+                    ? "🔒 ???: (미션 1 완료 후 공개)"
+                    : `미션 ${index + 1}: ${mission.text}`}
                 </label>
               </div>
             );
