@@ -1,9 +1,14 @@
-import React from 'react';
-import { Check, Users, Trophy } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { Checkbox } from './ui/checkbox';
-import { Badge } from './ui/badge';
-import { Progress } from './ui/progress';
+import { Users, Trophy } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "./ui/card";
+import { Checkbox } from "./ui/checkbox";
+import { Badge } from "./ui/badge";
+import { Progress } from "./ui/progress";
 
 export interface Mission {
   id: number;
@@ -25,19 +30,33 @@ interface GroupMissionsProps {
 }
 
 export function GroupMissions({ group, onToggleMission }: GroupMissionsProps) {
-  const completedCount = group.missions.filter(m => m.completed).length;
+  const completedCount = group.missions.filter((m) => m.completed).length;
   const totalCount = group.missions.length;
   const progress = (completedCount / totalCount) * 100;
 
+  // Check if mission 1 is completed
+  const mission1Completed =
+    group.missions.find((m) => m.id === 1)?.completed ?? false;
+
+  // Helper function to check if a mission is enabled
+  const isMissionEnabled = (missionId: number) => {
+    if (missionId === 1) return true; // Mission 1 is always enabled
+    // Mission 2 and 3 require mission 1 to be completed
+    return mission1Completed;
+  };
+
   return (
-    <Card className="h-full border-t-4 shadow-md" style={{ borderTopColor: group.color }}>
+    <Card
+      className="h-full border-t-4 shadow-md"
+      style={{ borderTopColor: group.color }}
+    >
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-xl mb-1">{group.name}</CardTitle>
             <CardDescription className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-3 h-3" />
-              {group.members.join(', ')}
+              {group.members.join(", ")}
             </CardDescription>
           </div>
           <Badge variant="outline" className="text-xs whitespace-nowrap">
@@ -54,25 +73,41 @@ export function GroupMissions({ group, onToggleMission }: GroupMissionsProps) {
           미션 목록
         </div>
         <div className="space-y-3">
-          {group.missions.map((mission) => (
-            <div 
-              key={mission.id} 
-              className={`flex items-start space-x-3 p-3 rounded-lg transition-colors ${mission.completed ? 'bg-green-50' : 'bg-gray-50 hover:bg-gray-100'}`}
-            >
-              <Checkbox 
-                id={`mission-${group.id}-${mission.id}`}
-                checked={mission.completed}
-                onCheckedChange={() => onToggleMission(group.id, mission.id)}
-                className="mt-0.5 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-              />
-              <label
-                htmlFor={`mission-${group.id}-${mission.id}`}
-                className={`text-sm font-medium leading-snug cursor-pointer select-none ${mission.completed ? 'text-green-700 line-through decoration-2 decoration-green-700/50' : 'text-gray-700'}`}
+          {group.missions.map((mission) => {
+            const isEnabled = isMissionEnabled(mission.id);
+            return (
+              <div
+                key={mission.id}
+                className={`flex items-start space-x-3 p-3 rounded-lg transition-colors ${
+                  mission.completed
+                    ? "bg-green-50"
+                    : isEnabled
+                    ? "bg-gray-50 hover:bg-gray-100"
+                    : "bg-gray-50 opacity-50"
+                }`}
               >
-                {mission.text}
-              </label>
-            </div>
-          ))}
+                <Checkbox
+                  id={`mission-${group.id}-${mission.id}`}
+                  checked={mission.completed}
+                  disabled={!isEnabled}
+                  onCheckedChange={() => onToggleMission(group.id, mission.id)}
+                  className="mt-0.5 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 disabled:cursor-not-allowed"
+                />
+                <label
+                  htmlFor={`mission-${group.id}-${mission.id}`}
+                  className={`text-sm font-medium leading-snug select-none ${
+                    !isEnabled
+                      ? "text-gray-400 cursor-not-allowed"
+                      : mission.completed
+                      ? "text-green-700 line-through decoration-2 decoration-green-700/50 cursor-pointer"
+                      : "text-gray-700 cursor-pointer"
+                  }`}
+                >
+                  {!isEnabled ? "🔒 ??? (미션 1 완료 후 공개)" : mission.text}
+                </label>
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

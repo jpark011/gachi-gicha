@@ -135,8 +135,19 @@ export default function App() {
   const currentGroup = groups.find((g) => g.id === activeMapGroup) || groups[0];
 
   const handleToggleMission = (groupId: string, missionId: number) => {
-    setGroups((prevGroups) =>
-      prevGroups.map((group) =>
+    setGroups((prevGroups) => {
+      const targetGroup = prevGroups.find((g) => g.id === groupId);
+      if (!targetGroup) return prevGroups;
+
+      // Prevent toggling missions 2 and 3 if mission 1 is not completed
+      if (missionId > 1) {
+        const mission1 = targetGroup.missions.find((m) => m.id === 1);
+        if (!mission1?.completed) {
+          return prevGroups; // Don't allow toggling if mission 1 is not completed
+        }
+      }
+
+      return prevGroups.map((group) =>
         group.id === groupId
           ? {
               ...group,
@@ -147,8 +158,8 @@ export default function App() {
               ),
             }
           : group
-      )
-    );
+      );
+    });
   };
 
   return (
