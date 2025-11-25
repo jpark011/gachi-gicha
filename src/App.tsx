@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Hero } from "./components/Hero";
 import { MapDisplay } from "./components/MapDisplay";
 import { GroupMissions, Group } from "./components/GroupMissions";
@@ -89,8 +89,26 @@ const SCHEDULE = [
 ];
 export default function App() {
   const [activeMapGroup, setActiveMapGroup] = useState("A");
+  const [groups, setGroups] = useState<Group[]>(GROUPS);
 
-  const currentGroup = GROUPS.find((g) => g.id === activeMapGroup) || GROUPS[0];
+  const currentGroup = groups.find((g) => g.id === activeMapGroup) || groups[0];
+
+  const handleToggleMission = (groupId: string, missionId: number) => {
+    setGroups((prevGroups) =>
+      prevGroups.map((group) =>
+        group.id === groupId
+          ? {
+              ...group,
+              missions: group.missions.map((mission) =>
+                mission.id === missionId
+                  ? { ...mission, completed: !mission.completed }
+                  : mission
+              ),
+            }
+          : group
+      )
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 font-sans space-y-8">
@@ -121,9 +139,13 @@ export default function App() {
 
           {/* Mobile View: Tabs */}
           <div className="md:hidden">
-            <Tabs defaultValue="A" className="w-full">
+            <Tabs
+              value={activeMapGroup}
+              onValueChange={setActiveMapGroup}
+              className="w-full"
+            >
               <TabsList className="grid w-full grid-cols-2 mb-4">
-                {GROUPS.map((group) => (
+                {groups.map((group) => (
                   <TabsTrigger
                     key={group.id}
                     value={group.id}
@@ -133,11 +155,11 @@ export default function App() {
                   </TabsTrigger>
                 ))}
               </TabsList>
-              {GROUPS.map((group) => (
+              {groups.map((group) => (
                 <TabsContent key={group.id} value={group.id}>
                   <GroupMissions
                     group={group}
-                    onToggleMission={(groupId) => setActiveMapGroup(groupId)}
+                    onToggleMission={handleToggleMission}
                   />
                 </TabsContent>
               ))}
@@ -146,11 +168,11 @@ export default function App() {
 
           {/* Desktop View: Grid */}
           <div className="hidden md:grid grid-cols-2 gap-6">
-            {GROUPS.map((group) => (
+            {groups.map((group) => (
               <GroupMissions
                 key={group.id}
                 group={group}
-                onToggleMission={setActiveMapGroup}
+                onToggleMission={handleToggleMission}
               />
             ))}
           </div>
