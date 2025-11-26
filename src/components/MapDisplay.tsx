@@ -28,6 +28,7 @@ export function MapDisplay({
   const markersRef = useRef<any[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // Initialize map (runs once)
   useEffect(() => {
     const apiKey = import.meta.env.VITE_KAKAO_MAP_API_KEY;
 
@@ -54,48 +55,6 @@ export function MapDisplay({
 
       const map = new window.kakao.maps.Map(mapContainerRef.current, options);
       mapRef.current = map;
-
-      // Clear existing markers
-      markersRef.current.forEach((marker) => marker.setMap(null));
-      markersRef.current = [];
-
-      // Create markers for each location
-      locations.forEach((loc) => {
-        const position = new window.kakao.maps.LatLng(loc.lat, loc.lng);
-
-        // Create custom marker using circle overlay
-        const marker = new window.kakao.maps.Marker({
-          position: position,
-          map: map,
-        });
-
-        // Create info window
-        const infoWindow = new window.kakao.maps.InfoWindow({
-          content: `<div style="padding:8px 12px;font-weight:bold;text-align:center;color:${markerColor};">${loc.name}</div>`,
-        });
-
-        // Add click event
-        window.kakao.maps.event.addListener(marker, "click", () => {
-          // Close all other info windows
-          markersRef.current.forEach((m) => {
-            if (m.infoWindow) {
-              m.infoWindow.close();
-            }
-          });
-
-          if (activeId === loc.id) {
-            setActiveId(null);
-            infoWindow.close();
-          } else {
-            setActiveId(loc.id);
-            infoWindow.open(map, marker);
-          }
-        });
-
-        // Store info window with marker for cleanup
-        (marker as any).infoWindow = infoWindow;
-        markersRef.current.push(marker);
-      });
     }
 
     // Load Kakao Maps API if not already loaded
@@ -134,6 +93,73 @@ export function MapDisplay({
       } else {
         initializeMap();
       }
+    }
+  }, []); // Only run once on mount
+
+  // Update markers and reposition map when locations change
+  useEffect(() => {
+    if (!mapRef.current || !window.kakao?.maps) return;
+
+    const map = mapRef.current;
+
+    // Clear existing markers
+    markersRef.current.forEach((marker) => {
+      marker.setMap(null);
+      if ((marker as any).infoWindow) {
+        (marker as any).infoWindow.close();
+      }
+    });
+    markersRef.current = [];
+
+    if (locations.length === 0) return;
+
+    // Create markers for each location
+    const positions: any[] = [];
+    locations.forEach((loc) => {
+      const position = new window.kakao.maps.LatLng(loc.lat, loc.lng);
+      positions.push(position);
+
+      // Create marker
+      const marker = new window.kakao.maps.Marker({
+        position: position,
+        map: map,
+      });
+
+      // Create info window
+      const infoWindow = new window.kakao.maps.InfoWindow({
+        content: `<div style="padding:8px 12px;font-weight:bold;text-align:center;color:${markerColor};">${loc.name}</div>`,
+      });
+
+      // Add click event
+      window.kakao.maps.event.addListener(marker, "click", () => {
+        // Close all other info windows
+        markersRef.current.forEach((m) => {
+          if (m.infoWindow) {
+            m.infoWindow.close();
+          }
+        });
+
+        if (activeId === loc.id) {
+          setActiveId(null);
+          infoWindow.close();
+        } else {
+          setActiveId(loc.id);
+          infoWindow.open(map, marker);
+        }
+      });
+
+      // Store info window with marker for cleanup
+      (marker as any).infoWindow = infoWindow;
+      markersRef.current.push(marker);
+    });
+
+    // Reposition map to fit all markers
+    if (positions.length > 0) {
+      const bounds = new window.kakao.maps.LatLngBounds();
+      positions.forEach((position) => {
+        bounds.extend(position);
+      });
+      map.setBounds(bounds);
     }
 
     return () => {
