@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import useLocalStorageState from "use-local-storage-state";
+import confetti from "canvas-confetti";
 import { Hero } from "./components/Hero";
 import { MapDisplay } from "./components/MapDisplay";
 import { GroupMissions, Group } from "./components/GroupMissions";
@@ -230,6 +231,14 @@ export default function App() {
     }, 100);
   };
 
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+    });
+  };
+
   const handleVerification = (codeToVerify?: string[]) => {
     if (!verifyingGroupId) return;
 
@@ -252,6 +261,7 @@ export default function App() {
             : group
         )
       );
+      triggerConfetti();
       setVerificationModalOpen(false);
       setVerificationCode(["", "", "", ""]);
       setVerificationError("");
@@ -333,7 +343,13 @@ export default function App() {
         }
       }
 
-      return prevGroups.map((group) =>
+      // Check if mission is being completed (not uncompleted)
+      const currentMission = targetGroup.missions.find(
+        (m) => m.id === missionId
+      );
+      const isCompleting = !currentMission?.completed;
+
+      const newGroups = prevGroups.map((group) =>
         group.id === groupId
           ? {
               ...group,
@@ -345,6 +361,13 @@ export default function App() {
             }
           : group
       );
+
+      // Trigger confetti if mission is being completed
+      if (isCompleting) {
+        triggerConfetti();
+      }
+
+      return newGroups;
     });
   };
 
