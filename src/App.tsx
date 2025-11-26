@@ -123,7 +123,7 @@ const MAP_LOCATIONS = {
 const SCHEDULE = [
   {
     time: "09:00",
-    title: "수서 출발",
+    title: "수서역 출발",
     description: "수서역 SRT 09:05 출발\n(동탄역 도착: 09:21)",
   },
   {
@@ -149,7 +149,7 @@ const SCHEDULE = [
   },
   {
     time: "17:55",
-    title: "대전 환승",
+    title: "대전역 환승",
     description: "역내 섬심당에서 빵 구매. (KTX 18:25 출발)",
   },
   {
@@ -491,7 +491,7 @@ export default function App() {
                   inputRefs.current[0]?.focus();
                 }, 10);
               }}
-              className="w-full"
+              className="w-full text-red-500 border-red-500"
             >
               RESET
             </Button>
