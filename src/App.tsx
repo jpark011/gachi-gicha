@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -42,16 +41,81 @@ const GROUPS = [
   },
 ];
 
+// Gyeongju (경주) locations with real coordinates
 const MAP_LOCATIONS = {
   A: [
-    { id: "A1", name: "첨성대", x: 45, y: 55 },
-    { id: "A2", name: "황남빵 맛집", x: 35, y: 50 },
-    { id: "A3", name: "퀴즈 행사장", x: 50, y: 60 },
+    {
+      id: "00",
+      name: "요석궁1779",
+      url: "https://kko.to/AnLRzIdhdG",
+      lat: 35.8305534491356,
+      lng: 129.217003047852,
+    },
+    {
+      id: "A1",
+      name: "국립경주박물관",
+      url: "https://kko.kakao.com/q7vcYVoESy",
+      lat: 35.8294300867523,
+      lng: 129.228681914688,
+    },
+    {
+      id: "A2",
+      name: "최부자댁",
+      url: "https://kko.kakao.com/yGf23ZadEt",
+      lat: 35.8310316766874,
+      lng: 129.215833534717,
+    },
+    {
+      id: "A3",
+      name: "월정교",
+      url: "https://kko.kakao.com/QhX-WIPXjg",
+      lat: 35.8290792077533,
+      lng: 129.217322613795,
+    },
+    {
+      id: "A4",
+      name: "설월당",
+      url: "https://kko.kakao.com/f5Gp_J42q9",
+      lat: 35.8350776172556,
+      lng: 129.212505765061,
+    },
   ],
   B: [
-    { id: "B1", name: "동궁과 월지", x: 60, y: 40 },
-    { id: "B2", name: "기념품 가게", x: 38, y: 52 },
-    { id: "B3", name: "신경주역(KTX)", x: 20, y: 20 },
+    {
+      id: "00",
+      name: "요석궁1779",
+      url: "https://kko.to/AnLRzIdhdG",
+      lat: 35.8305534491356,
+      lng: 129.217003047852,
+    },
+    {
+      id: "B1",
+      name: "황리단길",
+      url: "https://kko.kakao.com/3VmOnTBb0C",
+      lat: 35.8392936925501,
+      lng: 129.209681679209,
+    },
+    {
+      id: "B2",
+      name: "경주타워",
+      url: "https://kko.kakao.com/Gu8vFtBKcA",
+      lat: 35.8322527041009,
+      lng: 129.288867087571,
+    },
+    {
+      id: "B3",
+      name: "황룡원",
+      url: "https://kko.kakao.com/yG57aWgiBQ",
+      lat: 35.8368355746382,
+      lng: 129.290065268344,
+    },
+    {
+      id: "B4",
+      name: "브레스커피웍스",
+      url: "https://kko.kakao.com/NS0dlwA6hj",
+      lat: 35.80333570855,
+      lng: 129.313192015783,
+    },
   ],
 };
 
@@ -299,7 +363,6 @@ export default function App() {
         {/* Map Section */}
         <section className="space-y-4">
           <MapDisplay
-            imageUrl="https://images.unsplash.com/photo-1736117703416-f260ee174bac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbGx1c3RyYXRlZCUyMG1hcCUyMHRvcCUyMHZpZXd8ZW58MXx8fHwxNzYzNTMwMDA4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
             locations={
               MAP_LOCATIONS[activeMapGroup as keyof typeof MAP_LOCATIONS]
             }
