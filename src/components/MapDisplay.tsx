@@ -28,6 +28,7 @@ export function MapDisplay({
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   // Initialize map (runs once)
   useEffect(() => {
@@ -57,6 +58,7 @@ export function MapDisplay({
       try {
         const map = new window.kakao.maps.Map(mapContainerRef.current, options);
         mapRef.current = map;
+        setMapReady(true);
         console.log("Map initialized successfully");
       } catch (error) {
         console.error("Failed to initialize map:", error);
@@ -104,9 +106,10 @@ export function MapDisplay({
 
   // Update markers and reposition map when locations change
   useEffect(() => {
-    if (!mapRef.current || !window.kakao?.maps) {
+    if (!mapReady || !mapRef.current || !window.kakao?.maps) {
       console.log("Map or Kakao Maps not ready for markers", {
-        mapReady: !!mapRef.current,
+        mapReady: mapReady,
+        mapRefReady: !!mapRef.current,
         kakaoReady: !!window.kakao?.maps,
       });
       return;
@@ -209,7 +212,7 @@ export function MapDisplay({
       });
       markersRef.current = [];
     };
-  }, [locations, markerColor]); // Removed activeId to prevent unnecessary marker recreation
+  }, [locations, markerColor, mapReady]); // Added mapReady to dependencies
 
   return (
     <div className="w-full bg-white rounded-2xl shadow-sm border overflow-hidden">
