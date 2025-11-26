@@ -12,6 +12,7 @@ interface Location {
   name: string;
   lat: number; // Latitude
   lng: number; // Longitude
+  url?: string; // Optional URL link
 }
 
 interface MapDisplayProps {
@@ -40,21 +41,26 @@ export function MapDisplay({
     }
 
     function initializeMap() {
-      if (!mapContainerRef.current || !window.kakao?.maps) return;
+      if (!mapContainerRef.current || !window.kakao?.maps) {
+        console.log("Map container or Kakao Maps not ready");
+        return;
+      }
 
-      // Calculate center from locations
-      const centerLat =
-        locations.reduce((sum, loc) => sum + loc.lat, 0) / locations.length;
-      const centerLng =
-        locations.reduce((sum, loc) => sum + loc.lng, 0) / locations.length;
+      // Use default center if no locations yet
+      const defaultCenter = new window.kakao.maps.LatLng(35.8294, 129.2194); // Gyeongju center
 
       const options = {
-        center: new window.kakao.maps.LatLng(centerLat, centerLng),
+        center: defaultCenter,
         level: 5, // Zoom level (3-14, smaller number = more zoomed in)
       };
 
-      const map = new window.kakao.maps.Map(mapContainerRef.current, options);
-      mapRef.current = map;
+      try {
+        const map = new window.kakao.maps.Map(mapContainerRef.current, options);
+        mapRef.current = map;
+        console.log("Map initialized successfully");
+      } catch (error) {
+        console.error("Failed to initialize map:", error);
+      }
     }
 
     // Load Kakao Maps API if not already loaded
@@ -98,7 +104,13 @@ export function MapDisplay({
 
   // Update markers and reposition map when locations change
   useEffect(() => {
-    if (!mapRef.current || !window.kakao?.maps) return;
+    if (!mapRef.current || !window.kakao?.maps) {
+      console.log("Map or Kakao Maps not ready for markers", {
+        mapReady: !!mapRef.current,
+        kakaoReady: !!window.kakao?.maps,
+      });
+      return;
+    }
 
     const map = mapRef.current;
 
@@ -111,47 +123,72 @@ export function MapDisplay({
     });
     markersRef.current = [];
 
-    if (locations.length === 0) return;
+    if (locations.length === 0) {
+      console.log("No locations to display");
+      return;
+    }
+
+    console.log("Creating markers for", locations.length, "locations");
 
     // Create markers for each location
     const positions: any[] = [];
     locations.forEach((loc) => {
-      const position = new window.kakao.maps.LatLng(loc.lat, loc.lng);
-      positions.push(position);
+      try {
+        const position = new window.kakao.maps.LatLng(loc.lat, loc.lng);
+        positions.push(position);
 
-      // Create marker
-      const marker = new window.kakao.maps.Marker({
-        position: position,
-        map: map,
-      });
+        // Create marker
+        const marker = new window.kakao.maps.Marker({
+          position: position,
+          map: map,
+          clickable: true,
+        });
 
-      // Create info window
-      const infoWindow = new window.kakao.maps.InfoWindow({
-        content: `<div style="padding:8px 12px;font-weight:bold;text-align:center;color:${markerColor};">${loc.name}</div>`,
-      });
+        console.log("Marker created for", loc.name, marker);
 
-      // Add click event
-      window.kakao.maps.event.addListener(marker, "click", () => {
-        // Close all other info windows
-        markersRef.current.forEach((m) => {
-          if (m.infoWindow) {
-            m.infoWindow.close();
+        // Create info window with name and URL
+        const infoContent = loc.url
+          ? `<div style="padding:12px;min-width:150px;text-align:center;">
+              <div style="font-weight:bold;font-size:14px;color:#000;margin-bottom:8px;">${loc.name}</div>
+              <a href="${loc.url}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 12px;background-color:#3b82f6;color:white;text-decoration:none;border-radius:4px;font-size:12px;font-weight:500;">지도 보기</a>
+            </div>`
+          : `<div style="padding:8px 12px;font-weight:bold;text-align:center;color:#000;">${loc.name}</div>`;
+
+        // Create info window with removable option (following Kakao Maps API sample)
+        const infoWindow = new window.kakao.maps.InfoWindow({
+          content: infoContent,
+          removable: true, // Allows closing the info window with X button
+        });
+
+        // Add click event listener (following Kakao Maps API sample pattern)
+        window.kakao.maps.event.addListener(marker, "click", function () {
+          // Close all other info windows first
+          console.log("marker click", marker);
+          markersRef.current.forEach((m) => {
+            if (m.infoWindow && m.infoWindow !== infoWindow) {
+              m.infoWindow.close();
+            }
+          });
+
+          // Toggle info window: close if already open, open if closed
+          if (infoWindow.getMap()) {
+            infoWindow.close();
+            setActiveId(null);
+          } else {
+            infoWindow.open(map, marker);
+            setActiveId(loc.id);
           }
         });
 
-        if (activeId === loc.id) {
-          setActiveId(null);
-          infoWindow.close();
-        } else {
-          setActiveId(loc.id);
-          infoWindow.open(map, marker);
-        }
-      });
-
-      // Store info window with marker for cleanup
-      (marker as any).infoWindow = infoWindow;
-      markersRef.current.push(marker);
+        // Store info window with marker for cleanup
+        (marker as any).infoWindow = infoWindow;
+        markersRef.current.push(marker);
+      } catch (error) {
+        console.error("Error creating marker for", loc.name, error);
+      }
     });
+
+    console.log("Total markers created:", markersRef.current.length);
 
     // Reposition map to fit all markers
     if (positions.length > 0) {
@@ -172,7 +209,7 @@ export function MapDisplay({
       });
       markersRef.current = [];
     };
-  }, [locations, markerColor, activeId]);
+  }, [locations, markerColor]); // Removed activeId to prevent unnecessary marker recreation
 
   return (
     <div className="w-full bg-white rounded-2xl shadow-sm border overflow-hidden">
