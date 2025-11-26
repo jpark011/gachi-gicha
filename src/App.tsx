@@ -239,6 +239,62 @@ export default function App() {
     });
   };
 
+  const triggerEpicConfetti = (teamColor?: string) => {
+    const colors = teamColor
+      ? [teamColor, "#FFD700", "#FF6B6B", "#4ECDC4", "#45B7D1"]
+      : ["#FFD700", "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7"];
+
+    // Multiple bursts from different positions
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    const interval = setInterval(() => {
+      if (Date.now() > end) {
+        clearInterval(interval);
+        return;
+      }
+
+      // Burst from left
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.6 },
+        colors: colors,
+      });
+
+      // Burst from right
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.6 },
+        colors: colors,
+      });
+
+      // Burst from center
+      confetti({
+        particleCount: 100,
+        spread: 80,
+        origin: { y: 0.5 },
+        colors: colors,
+        shapes: ["circle", "square"],
+      });
+    }, 100);
+
+    // Final massive burst
+    setTimeout(() => {
+      confetti({
+        particleCount: 200,
+        spread: 360,
+        origin: { y: 0.5 },
+        colors: colors,
+        shapes: ["circle", "square", "star"],
+        scalar: 1.2,
+      });
+    }, duration);
+  };
+
   const handleVerification = (codeToVerify?: string[]) => {
     if (!verifyingGroupId) return;
 
@@ -249,8 +305,8 @@ export default function App() {
 
     if (enteredCode === correctCode) {
       // Complete mission 1
-      setGroups((prevGroups) =>
-        prevGroups.map((group) =>
+      setGroups((prevGroups) => {
+        const newGroups = prevGroups.map((group) =>
           group.id === verifyingGroupId
             ? {
                 ...group,
@@ -259,9 +315,21 @@ export default function App() {
                 ),
               }
             : group
-        )
-      );
-      triggerConfetti();
+        );
+
+        // Check if all missions are now complete
+        const updatedGroup = newGroups.find((g) => g.id === verifyingGroupId);
+        const allComplete =
+          updatedGroup?.missions.every((m) => m.completed) ?? false;
+
+        if (allComplete) {
+          triggerEpicConfetti(updatedGroup?.color);
+        } else {
+          triggerConfetti();
+        }
+
+        return newGroups;
+      });
       setVerificationModalOpen(false);
       setVerificationCode(["", "", "", ""]);
       setVerificationError("");
@@ -364,7 +432,16 @@ export default function App() {
 
       // Trigger confetti if mission is being completed
       if (isCompleting) {
-        triggerConfetti();
+        // Check if all missions are now complete
+        const updatedGroup = newGroups.find((g) => g.id === groupId);
+        const allComplete =
+          updatedGroup?.missions.every((m) => m.completed) ?? false;
+
+        if (allComplete) {
+          triggerEpicConfetti(updatedGroup?.color);
+        } else {
+          triggerConfetti();
+        }
       }
 
       return newGroups;
