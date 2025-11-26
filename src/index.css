@@ -2270,3 +2270,114 @@ html {
       rotate(var(--tw-exit-rotate, 0));
   }
 }
+
+/* Metal Slug Style MISSION COMPLETE Animation */
+.mission-complete-container {
+  perspective: 1000px;
+}
+
+.mission-complete-text {
+  text-align: center;
+  animation: missionCompletePop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)
+      forwards,
+    missionCompleteGlow 2s ease-in-out 0.6s infinite;
+  transform-style: preserve-3d;
+}
+
+.mission-complete-line {
+  font-size: 5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #ffd700;
+  text-shadow: -4px -4px 0px #000, 4px -4px 0px #000, -4px 4px 0px #000,
+    4px 4px 0px #000, 0 0 20px rgba(255, 215, 0, 0.8),
+    0 0 40px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.4);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-family: "Arial Black", "Arial Bold", sans-serif;
+  animation: missionCompleteLetterPop 0.8s
+    cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  opacity: 0;
+}
+
+.mission-complete-line:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.mission-complete-line:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.mission-complete-team {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  color: #ffd700;
+  text-shadow: -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000,
+    2px 2px 0px #000, 0 0 15px rgba(255, 215, 0, 0.6);
+  letter-spacing: 0.1em;
+  animation: missionCompleteTeamPop 1s cubic-bezier(0.68, -0.55, 0.265, 1.55)
+    0.5s forwards;
+  opacity: 0;
+}
+
+@keyframes missionCompletePop {
+  0% {
+    transform: scale(0) rotateX(90deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotateX(0deg);
+  }
+  100% {
+    transform: scale(1) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes missionCompleteGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1))
+      drop-shadow(0 0 60px rgba(255, 215, 0, 0.6));
+  }
+}
+
+@keyframes missionCompleteLetterPop {
+  0% {
+    transform: translateY(50px) scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes missionCompleteTeamPop {
+  0% {
+    transform: translateY(30px) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mission-complete-line {
+    font-size: 3rem;
+    text-shadow: -3px -3px 0px #000, 3px -3px 0px #000, -3px 3px 0px #000,
+      3px 3px 0px #000, 0 0 15px rgba(255, 215, 0, 0.8),
+      0 0 30px rgba(255, 215, 0, 0.6);
+  }
+
+  .mission-complete-team {
+    font-size: 1.5rem;
+  }
+}

@@ -205,6 +205,10 @@ export default function App() {
   const [verifyingGroupId, setVerifyingGroupId] = useState<string | null>(null);
   const [verificationCode, setVerificationCode] = useState(["", "", "", ""]);
   const [verificationError, setVerificationError] = useState("");
+  const [showMissionComplete, setShowMissionComplete] = useState(false);
+  const [completedTeamName, setCompletedTeamName] = useState<string | null>(
+    null
+  );
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Merge with defaults on mount to handle new missions
@@ -239,10 +243,14 @@ export default function App() {
     });
   };
 
-  const triggerEpicConfetti = (teamColor?: string) => {
+  const triggerEpicConfetti = (teamColor?: string, teamName?: string) => {
     const colors = teamColor
       ? [teamColor, "#FFD700", "#FF6B6B", "#4ECDC4", "#45B7D1"]
       : ["#FFD700", "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7"];
+
+    // Show the MISSION COMPLETE message
+    setCompletedTeamName(teamName || null);
+    setShowMissionComplete(true);
 
     // Multiple bursts from different positions
     const duration = 3000;
@@ -293,6 +301,12 @@ export default function App() {
         scalar: 1.2,
       });
     }, duration);
+
+    // Hide message after animation
+    setTimeout(() => {
+      setShowMissionComplete(false);
+      setCompletedTeamName(null);
+    }, 4000);
   };
 
   const handleVerification = (codeToVerify?: string[]) => {
@@ -323,7 +337,7 @@ export default function App() {
           updatedGroup?.missions.every((m) => m.completed) ?? false;
 
         if (allComplete) {
-          triggerEpicConfetti(updatedGroup?.color);
+          triggerEpicConfetti(updatedGroup?.color, updatedGroup?.name);
         } else {
           triggerConfetti();
         }
@@ -438,7 +452,7 @@ export default function App() {
           updatedGroup?.missions.every((m) => m.completed) ?? false;
 
         if (allComplete) {
-          triggerEpicConfetti(updatedGroup?.color);
+          triggerEpicConfetti(updatedGroup?.color, updatedGroup?.name);
         } else {
           triggerConfetti();
         }
@@ -450,6 +464,21 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 font-sans space-y-8">
+      {/* MISSION COMPLETE Overlay */}
+      {showMissionComplete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="mission-complete-container">
+            <div className="mission-complete-text">
+              <div className="mission-complete-line">MISSION</div>
+              <div className="mission-complete-line">COMPLETE</div>
+              {completedTeamName && (
+                <div className="mission-complete-team">{completedTeamName}</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <Hero
         title="같이기차, 낭만여행"
