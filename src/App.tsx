@@ -306,7 +306,7 @@ export default function App() {
     setTimeout(() => {
       setShowMissionComplete(false);
       setCompletedTeamName(null);
-    }, 4000);
+    }, 6000);
   };
 
   const handleVerification = (codeToVerify?: string[]) => {
