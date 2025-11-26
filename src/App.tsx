@@ -21,7 +21,7 @@ const GROUPS = [
   {
     id: "A",
     name: "🗽럼프 팀",
-    members: ["aren", "geralt", "lucy", "amy"],
+    members: ["aren", "geralt", "moka", "june"],
     color: "#ef4444", // red-500
     missions: [
       { id: 1, text: "요석궁에서 비밀쪽지 찾기", completed: false },
@@ -32,7 +32,7 @@ const GROUPS = [
   {
     id: "B",
     name: "🧧진핑 팀",
-    members: ["jay", "jayce", "jinx", "vayne"],
+    members: ["jay", "jeff", "logan", "adel"],
     color: "#3b82f6", // blue-500
     missions: [
       { id: 1, text: "요석궁에서 비밀쪽지 찾기", completed: false },
